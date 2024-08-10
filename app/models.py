@@ -9,3 +9,8 @@ class TodoItem(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+class TodoItemCreate(BaseModel):
+    title: str
+    description: str
+    created_at: datetime
+    updated_at: datetime

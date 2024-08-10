@@ -1,10 +1,16 @@
-from fastapi import APIRouter
-from app.models import TodoItem
-from app.models import datetime
 import json
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.models import TodoItem, TodoItemCreate
+from app.models import datetime
+from app.database import get_db
+from app.schemas import TodoSchema
 
 router = APIRouter()
+
 
 def load_todos():
     with open("storage.json", "r") as file:
@@ -18,8 +24,8 @@ def save_todos(todos):
         json.dump(todos_dict, file, indent=2, default=str)
 
 @router.get("/todos")
-def get_all_todos():
-    todos = load_todos()
+def get_all_todos(db: Session = Depends(get_db)):
+    todos = db.query(TodoSchema).all()
     return todos
 
 @router.get("/todos/{id}")
@@ -34,18 +40,22 @@ def get_todo(id: int):
 class CreateTodoRequest(BaseModel):
     title: str
     description: str
+
 @router.post("/todos")
-def create_todo(request: CreateTodoRequest):
-    todos = load_todos()
+def create_todo(request: CreateTodoRequest, db: Session = Depends(get_db)):
+    now = datetime.now()
 
-    created_at = datetime.now()
-    updated_at = datetime.now()
-    new_id = len(todos) + 1
-    new_todo = TodoItem(id=new_id, title=request.title, description=request.description, created_at=created_at, updated_at=updated_at)
-    todos.append(new_todo)
+    todo = TodoSchema(
+        title=request.title,
+        description=request.description,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(todo)
+    db.commit()
+    db.refresh(todo)
 
-    save_todos(todos)
-    return {"message": f"Задача с ID {new_id} добавлена в список"}
+    return {"message": "success"}
 
 
 
@@ -74,7 +84,3 @@ def delete_todo(id: int):
             return {"message": f"Задача с ID {id} удалена"}
 
     return {"message": f"Задача с ID {id} не найдена"}
-
-
-
-    
