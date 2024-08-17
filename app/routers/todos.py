@@ -1,4 +1,3 @@
-import json
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -10,17 +9,6 @@ from app.schemas import TodoSchema
 
 router = APIRouter()
 
-
-# def load_todos():
-#     with open("storage.json", "r") as file:
-#         todos_json = json.load(file)
-#     todos = [TodoItem(**todo_json) for todo_json in todos_json]
-#     return todos
-
-# def save_todos(todos):
-#     todos_dict = [todo.model_dump() for todo in todos]
-#     with open("storage.json", "w") as file:
-#         json.dump(todos_dict, file, indent=2, default=str)
 
 @router.get("/todos")
 def get_all_todos(db: Session = Depends(get_db)):
@@ -35,7 +23,7 @@ def get_todo(id: int ,db: Session = Depends(get_db)):
     
     return {"message": f"Задача с id {id} не найдена"}
 
-# Новый POST-запрос, чтобы данные шли от пользователя
+
 class CreateTodoRequest(BaseModel):
     title: str
     description: str
@@ -53,9 +41,8 @@ def create_todo(request: CreateTodoRequest, db: Session = Depends(get_db)):
     db.add(todo)
     db.commit()
     db.refresh(todo)
-
-    return {"message": "success"}
-
+    todo = db.query(TodoSchema).filter_by(created_at=now).first()
+    return {"message": f"Задача с ID {todo.id} добавлена"}
 
 
 @router.put("/todos/{id}")
@@ -68,14 +55,12 @@ def update_todo(id: int, request: CreateTodoRequest, db: Session = Depends(get_d
 
     todo.title = request.title
     todo.description = request.description
-    todo.updated_at = now,
+    todo.updated_at = now
     
     db.commit()
     db.refresh(todo)
     return {"message": f"Задача с ID {id} обновлена"}
     
-
-
 
 @router.delete("/todos/{id}")
 def delete_todo(id: int, db: Session = Depends(get_db)):
@@ -83,9 +68,10 @@ def delete_todo(id: int, db: Session = Depends(get_db)):
         
     if todo == None:
         return  {"message": f"Задача с ID {id} не найдена!"}
+    db.add(todo)  
     db.delete(todo)
-    db.commit
-    db.refresh(todo)
+    db.commit()
+
     return {"message": f"Задача с ID {id} удалена"}
     
     
