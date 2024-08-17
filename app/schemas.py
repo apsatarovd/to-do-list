@@ -11,3 +11,4 @@ class TodoSchema(Base):
     description = Column(String)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    
