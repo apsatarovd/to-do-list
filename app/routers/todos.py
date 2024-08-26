@@ -6,7 +6,7 @@ from app.models import TodoItem, TodoItemCreate
 from app.models import datetime
 from app.database import get_db
 from app.schemas import TodoSchema
-
+from app.schemas import CreateTodoRequest
 router = APIRouter()
 
 
@@ -24,9 +24,6 @@ def get_todo(id: int ,db: Session = Depends(get_db)):
     return {"message": f"Задача с id {id} не найдена"}
 
 
-class CreateTodoRequest(BaseModel):
-    title: str
-    description: str
 
 @router.post("/todos")
 def create_todo(request: CreateTodoRequest, db: Session = Depends(get_db)):
@@ -50,7 +47,7 @@ def update_todo(id: int, request: CreateTodoRequest, db: Session = Depends(get_d
     todo = db.query(TodoSchema).filter_by(id=id).first()
     now = datetime.now()
    
-    if todo == None:
+    if not todo:
             return  {"message": f"Задача с ID {id} не найдена!"}
 
     todo.title = request.title
@@ -66,7 +63,7 @@ def update_todo(id: int, request: CreateTodoRequest, db: Session = Depends(get_d
 def delete_todo(id: int, db: Session = Depends(get_db)):
     todo = db.query(TodoSchema).filter_by(id=id).first()
         
-    if todo == None:
+    if not todo:
         return  {"message": f"Задача с ID {id} не найдена!"}
     db.add(todo)  
     db.delete(todo)

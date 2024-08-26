@@ -12,3 +12,6 @@ class TodoSchema(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     
+class CreateTodoRequest(BaseModel):
+    title: str
+    description: str
